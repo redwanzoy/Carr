@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 
-export default async function SignIn() {
+//export default async function SignIn()
+export default function SignIn() {
   const {signIn, errors, fetchStatus} = useSignIn();
 
   const router = useRouter();
@@ -100,7 +101,7 @@ export default async function SignIn() {
           value={code}
           onChangeText={setCode}
         />
-        {errors.fields.code && (
+        {errors?.fields?.code && (
           <Text className="text-red-500 mb-4" >
             {errors.fields.code.message}
           </Text>

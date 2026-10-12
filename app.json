@@ -28,6 +28,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Carr App to access your location to tag car coordinates"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/carr.png",

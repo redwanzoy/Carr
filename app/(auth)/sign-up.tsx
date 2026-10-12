@@ -1,11 +1,11 @@
 import { useAuth, useSignUp } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 
 
-export default async function SignUp() {
+export default function SignUp() {
   const {signUp, errors, fetchStatus} = useSignUp();
   const {isSignedIn}= useAuth();
 
@@ -17,15 +17,27 @@ export default async function SignUp() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
 
-  const isLoading = fetchStatus === "fetching";
-    // if (signUp.status === "complete" || isSignedIn){
-    //   return null;
-    // }
-    if (signUp.status === "complete") {
-      await signUp.finalize();
 
-      router.replace("/(root)/(tabs)");
+  const isLoading = fetchStatus === "fetching";
+
+
+  useEffect(() => {
+    async function completeSignUp() {
+      if (signUp.status === "complete") {
+        await signUp.finalize();
+        router.replace("/");
+      }
     }
+
+    completeSignUp();
+  }, [signUp.status]);
+
+  // const isLoading = fetchStatus === "fetching";
+  //   if (signUp.status === "complete") {
+  //     await signUp.finalize();
+
+  //     router.replace("/(root)/(tabs)");
+  //   }
 
   const OnSignUpPress = async () => {
     const {error} = await signUp.password({
