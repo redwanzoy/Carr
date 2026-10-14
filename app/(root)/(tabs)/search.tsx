@@ -277,7 +277,7 @@ export default function Search() {
               <View className="flex-row items-center bg-blue-50 border border-blue-200 rounded-full px-3 py-1 gap-1">
                 <Ionicons name= "speedometer-outline" size={11} color="#1D4ED8"/>
                 <Text className="text-blue-700 text-xs font-semibold capitalize">
-                  {mileage === 100000
+                  {mileage === 100001
                     ? "100k+ km" 
                     : mileage
                       ? `Under ${mileage /1000}k km`
