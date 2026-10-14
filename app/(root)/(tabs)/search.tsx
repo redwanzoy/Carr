@@ -1,5 +1,6 @@
 import CarCard from '@/components/CarCard'
 import FilterModal from '@/components/FilterModal'
+import { escapeIlikeSearch } from '@/lib/searchUtils'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/utils'
 import { useFilterStore } from '@/store/filterStore'
@@ -64,9 +65,10 @@ export default function Search() {
     let query = supabase.from("cars").select("*");
 
     if (debouncedSearch) {
+      const escapedSearch = escapeIlikeSearch(debouncedSearch);
+
       query = query.or(
-      `title.ilike.%${debouncedSearch}%,city.ilike.%${debouncedSearch}%`
-    );
+        `title.ilike.%${escapedSearch}%,city.ilike.%${escapedSearch}%`);
     }
 
     if (type) {
