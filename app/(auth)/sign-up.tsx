@@ -1,4 +1,4 @@
-import { useAuth, useSignUp } from '@clerk/expo';
+import { useSignUp } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -7,8 +7,6 @@ import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity
 
 export default function SignUp() {
   const {signUp, errors, fetchStatus} = useSignUp();
-  const {isSignedIn}= useAuth();
-
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -30,14 +28,8 @@ export default function SignUp() {
     }
 
     completeSignUp();
-  }, [signUp.status]);
+  }, [signUp, router]);
 
-  // const isLoading = fetchStatus === "fetching";
-  //   if (signUp.status === "complete") {
-  //     await signUp.finalize();
-
-  //     router.replace("/(root)/(tabs)");
-  //   }
 
   const OnSignUpPress = async () => {
     const {error} = await signUp.password({
@@ -61,7 +53,7 @@ export default function SignUp() {
       code,
     });
 
-    if (signUp.status == "complete") {
+    if (signUp.status === "complete") {
       await signUp.finalize({
         navigate: ({decorateUrl}) => {
           const url = decorateUrl("/");
@@ -72,9 +64,9 @@ export default function SignUp() {
   };
 
   if (
-    signUp.status == "missing_requirements" &&
+    signUp.status === "missing_requirements" &&
     signUp.unverifiedFields.includes("email_address") &&
-    signUp.missingFields.length == 0
+    signUp.missingFields.length === 0
   ) {
     return (
       <View className="flex-1 justify-center px-6 py-12" >

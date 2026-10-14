@@ -162,7 +162,7 @@ export default function Create() {
         latitude: String(location.coords.latitude),
         longitude: String(location.coords.longitude),
       });
-    } catch (error){
+    } catch {
       Alert.alert("Error, Could not detect location. Enter manually.");
     } finally {
       setDetectingLocation(false);

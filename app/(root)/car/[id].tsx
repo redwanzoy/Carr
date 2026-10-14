@@ -4,10 +4,9 @@ import { supabase } from '@/lib/supabase';
 import { formatPrice } from "@/lib/utils";
 import { useUserStore } from '@/store/userStore';
 import { Car } from '@/types';
-import { useAuth } from '@clerk/expo';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Dimensions, FlatList, Image, Linking, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import ImageViewing from "react-native-image-viewing";
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,12 +19,11 @@ const ADMIN_PHONE = "01312740417"
 export default function CarDetails() {
     
     const {id} = useLocalSearchParams<{id: string}>();
-    const {userId} = useAuth();
     const router = useRouter();
     const isAdmin = useUserStore((state) => state.isAdmin);
 
     const [car, setCar] = useState<Car | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
     const [expanded, setExpanded] = useState(false);
     const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -33,7 +31,7 @@ export default function CarDetails() {
     const authSupabase = useSupabase();
     const { isSaved, saveLoading, toggleSave } = useSavedCar(id ?? "");
 
-    const fetchCars = async () => {
+    const fetchCars =useCallback(async () => {
         const {data} = await supabase
             .from("cars")
             .select("*")
@@ -42,11 +40,11 @@ export default function CarDetails() {
         
         setCar(data);
         setLoading(false)
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchCars();
-    }, [id]);
+    }, [fetchCars]);
 
     const onScroll = ( e: NativeSyntheticEvent<NativeScrollEvent>) => {
         const index = Math.round(e.nativeEvent.contentOffset.x / width);
