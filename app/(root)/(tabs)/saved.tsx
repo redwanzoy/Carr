@@ -4,7 +4,7 @@ import { Car } from '@/types';
 import { useAuth } from '@clerk/expo';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,6 +18,7 @@ interface SavedCar {
 export default function Saved() {
   const { userId } = useAuth();
   const authSupabase = useSupabase();
+  const supabaseRef = useRef(authSupabase);
 
   const [saved, setSaved] = useState<SavedCar[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,15 +27,16 @@ export default function Saved() {
     if (!userId) return;
     setLoading(true);
 
-    const {data} = await authSupabase
+    const {data} = await supabaseRef.current
       .from("saved_cars")
       .select("id, car_id, cars(*)")
       .eq("user_clerk_id", userId)
       .order("id", {ascending: false});
+    
 
     setSaved((data as unknown as SavedCar[]) ?? []);
     setLoading(false);
-  }, [userId, authSupabase]);
+  }, [userId]);
 
 
   useFocusEffect(
