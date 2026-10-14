@@ -76,12 +76,6 @@ export default function Search() {
 
   const fetchResults = useCallback (async (reset = true) => {
 
-    console.log("FETCH START", {
-      reset,
-      page: page.current,
-      search: debouncedSearch,
-    });
-
     const currentRequestId = ++requestId.current;
 
     if (reset) {
@@ -142,13 +136,6 @@ export default function Search() {
     })
     .range(from, to);
 
-    console.log("FETCH RESPONSE", {
-      reset,
-      rows: data?.length,
-      error: queryError,
-      page: page.current,
-    });
-
     if (currentRequestId !== requestId.current) {
       return;
     }
@@ -167,7 +154,6 @@ export default function Search() {
     }
 
   const newResults = data ?? [];
-  console.log("Loaded:", newResults.length, "Page:", page.current);
 
     if (reset) {
       setResults(newResults);
@@ -246,9 +232,8 @@ export default function Search() {
 
           <TouchableOpacity
           onPress={() => setShowFilters(true)}
-          className={`w-12 h-12 rounded-2xl items-center justify-center $ 
-            { 
-              activeFilterCount > 0 ? "bg-blue-600" : "bg-white"            
+          className={`w-12 h-12 rounded-2xl items-center justify-center ${
+              activeFilterCount > 0 ? "bg-blue-600" : "bg-white"
             }`}
             style ={{
               shadowColor: "#000",
