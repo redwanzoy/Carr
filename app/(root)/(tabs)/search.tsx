@@ -6,7 +6,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { Car } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams } from 'expo-router'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -15,6 +15,8 @@ export default function Search() {
   const [results, setResults] = useState<Car[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false) 
+
+  const requestId = useRef(0);
 
   const { openFilters } = useLocalSearchParams<{openFilters?: string}>();
 
@@ -56,6 +58,7 @@ export default function Search() {
 
 
   const fetchResults = useCallback (async () => {
+    const currentRequestId = ++requestId.current;
     setLoading(true);
 
     let query = supabase.from("cars").select("*");
@@ -90,14 +93,14 @@ export default function Search() {
       ascending:false,
     });
 
+    if (currentRequestId !== requestId.current) {
+      return;
+    }
+
     setResults(data ?? []);
     setLoading(false);
   
   }, [debouncedSearch, type, mileage, minPrice, maxPrice]);
-
-  // useEffect(() => {
-  //   fetchResults();
-  // }, [fetchResults, debouncedSearch, type, mileage, minPrice, maxPrice]);
 
   useEffect(() => {
     fetchResults();
