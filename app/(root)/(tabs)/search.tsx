@@ -21,6 +21,20 @@ export default function Search() {
 
   const requestId = useRef(0);
 
+  const PAGE_SIZE = 20;
+
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const page = useRef(0);
+
+  const hasMoreRef = useRef(true);
+  const loadingRef = useRef(false);
+  const loadingMoreRef = useRef(false);
+
+  const justResetRef = useRef(false);
+
+  const hasScrolledRef = useRef(false);
+
   const { openFilters } = useLocalSearchParams<{openFilters?: string}>();
 
   useEffect(() => {
@@ -60,11 +74,32 @@ export default function Search() {
   }, [search]);
 
 
-  const fetchResults = useCallback (async () => {
+  const fetchResults = useCallback (async (reset = true) => {
+
+    console.log("FETCH START", {
+      reset,
+      page: page.current,
+      search: debouncedSearch,
+    });
+
     const currentRequestId = ++requestId.current;
 
-    setLoading(true);
-    setError(null);
+    if (reset) {
+      justResetRef.current = true;
+
+      page.current = 0;
+      hasMoreRef.current = true;
+
+      setLoading(true);
+      loadingRef.current = true;
+
+      setError(null);
+    } else {
+      if (!hasMoreRef.current || loadingMoreRef.current) return;
+
+      setLoadingMore(true);
+      loadingMoreRef.current = true;
+    }
 
     let query = supabase.from("cars").select("*");
 
@@ -79,13 +114,13 @@ export default function Search() {
       query = query.eq("type", type);
     }
 
-  if (mileage) {
-  if (mileage === 100001) {
-    query = query.gte("mileage", 100000);
-  } else {
-    query = query.lte("mileage", mileage);
+    if (mileage) {
+    if (mileage === 100001) {
+      query = query.gte("mileage", 100000);
+    } else {
+      query = query.lte("mileage", mileage);
+    }
   }
-}
 
     if (minPrice) {
       query = query.gte("price", minPrice);
@@ -95,8 +130,23 @@ export default function Search() {
       query = query.lte("price", maxPrice);
     }
 
-    const {data, error: queryError} = await query.order("created_at", {
-      ascending:false,
+    const from = reset ? 0 : page.current * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error: queryError } = await query
+    .order("created_at", {
+      ascending: false,
+    })
+    .order("id", {
+      ascending: false,
+    })
+    .range(from, to);
+
+    console.log("FETCH RESPONSE", {
+      reset,
+      rows: data?.length,
+      error: queryError,
+      page: page.current,
     });
 
     if (currentRequestId !== requestId.current) {
@@ -106,12 +156,50 @@ export default function Search() {
     if (queryError) {
       setResults([]);
       setError("Unable to load vehicles. Please try again.");
+
       setLoading(false);
+      loadingRef.current = false;
+
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
+
       return;
     }
 
-    setResults(data ?? []);
+  const newResults = data ?? [];
+  console.log("Loaded:", newResults.length, "Page:", page.current);
+
+    if (reset) {
+      setResults(newResults);
+    } else {
+      setResults((prev) => {
+        const existingIds = new Set(prev.map((car) => car.id));
+
+        const uniqueNewResults = newResults.filter(
+          (car) => !existingIds.has(car.id)
+        );
+
+        return [...prev, ...uniqueNewResults];
+      });
+    }
+
+    const moreAvailable = newResults.length === PAGE_SIZE;
+    hasMoreRef.current = moreAvailable;
+
+    page.current += 1;
+
+
     setLoading(false);
+    loadingRef.current = false;
+
+    setLoadingMore(false);
+    loadingMoreRef.current = false;
+
+    if (reset) {
+      setTimeout(() => {
+        justResetRef.current = false;
+      }, 1000);
+    }
   
   }, [debouncedSearch, type, mileage, minPrice, maxPrice]);
 
@@ -248,18 +336,44 @@ export default function Search() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 20, paddingBottom: 100}}
         showsVerticalScrollIndicator = {false}
+
+        onScrollBeginDrag={() => {
+          hasScrolledRef.current = true;
+        }}
+
+        onEndReached={() => {
+          if (
+            hasScrolledRef.current &&
+            !justResetRef.current &&
+            !loadingRef.current &&
+            !loadingMoreRef.current &&
+            hasMoreRef.current &&
+            results.length > 0
+          ) {
+            fetchResults(false);
+          }
+        }}
+        onEndReachedThreshold={0.5}
+
         ListHeaderComponent={
           <Text className="text-sm text-gray-400 mb-4">
-            { loading ? "Searching..." : `${results.length} cars found` }
+            {loading ? "Searching..." : `${results.length} cars found`}
           </Text>
-
         }
-              //added for fix
-        renderItem={({item}) => {
-        return (
-        <CarCard car={item}/>
-        )
-        }}
+
+        renderItem={({ item }) => (
+          <CarCard car={item}/>
+        )}
+
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator
+              size="small"
+              color="#2563EB"
+              className="py-5"
+            />
+          ) : null
+        }
 
         ListEmptyComponent={
           loading ? (
@@ -275,7 +389,7 @@ export default function Search() {
               </Text>
 
               <TouchableOpacity
-                onPress={fetchResults}
+                onPress={() => fetchResults(true)}
                 className="mt-4 bg-blue-600 px-5 py-2 rounded-full"
               >
                 <Text className="text-white font-semibold">
