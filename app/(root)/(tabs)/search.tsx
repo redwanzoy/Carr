@@ -6,7 +6,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { Car } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams } from 'expo-router'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -37,6 +37,8 @@ export default function Search() {
     setMaxPrice,
   } = useFilterStore()
 
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
   const activeFilterCount = [
     type !== null,
     mileage !== null,
@@ -45,16 +47,23 @@ export default function Search() {
   ].filter(Boolean).length;
 
   useEffect(() => {
-    fetchResults();
-  }, [search, type, mileage, minPrice, maxPrice]);
+  const timer = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 500);
 
-  const fetchResults = async () => {
+  return () => clearTimeout(timer);
+  }, [search]);
+
+
+  const fetchResults = useCallback (async () => {
     setLoading(true);
 
     let query = supabase.from("cars").select("*");
 
-    if (search) {
-      query = query.or(`title.ilike.%${search}%,city.ilike.%${search}%`);
+    if (debouncedSearch) {
+      query = query.or(
+      `title.ilike.%${debouncedSearch}%,city.ilike.%${debouncedSearch}%`
+    );
     }
 
     if (type) {
@@ -84,7 +93,16 @@ export default function Search() {
     setResults(data ?? []);
     setLoading(false);
   
-  };
+  }, [debouncedSearch, type, mileage, minPrice, maxPrice]);
+
+  // useEffect(() => {
+  //   fetchResults();
+  // }, [fetchResults, debouncedSearch, type, mileage, minPrice, maxPrice]);
+
+  useEffect(() => {
+    fetchResults();
+  }, [fetchResults]);
+
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
