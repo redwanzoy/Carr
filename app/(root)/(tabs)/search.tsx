@@ -17,6 +17,8 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false) 
 
+  const [error, setError] = useState<string | null>(null);
+
   const requestId = useRef(0);
 
   const { openFilters } = useLocalSearchParams<{openFilters?: string}>();
@@ -60,7 +62,9 @@ export default function Search() {
 
   const fetchResults = useCallback (async () => {
     const currentRequestId = ++requestId.current;
+
     setLoading(true);
+    setError(null);
 
     let query = supabase.from("cars").select("*");
 
@@ -91,11 +95,18 @@ export default function Search() {
       query = query.lte("price", maxPrice);
     }
 
-    const {data} = await query.order("created_at", {
+    const {data, error: queryError} = await query.order("created_at", {
       ascending:false,
     });
 
     if (currentRequestId !== requestId.current) {
+      return;
+    }
+
+    if (queryError) {
+      setResults([]);
+      setError("Unable to load vehicles. Please try again.");
+      setLoading(false);
       return;
     }
 
@@ -249,24 +260,42 @@ export default function Search() {
         <CarCard car={item}/>
         )
         }}
-      
-        // renderItem={({item}) => (
-        //     <CarCard car={item} />
-        // )}
+
         ListEmptyComponent={
-          !loading ? (
+          loading ? (
+            <ActivityIndicator 
+              size="large" 
+              color="#2563EB"
+              className="py-20"
+            />
+          ) : error ? (
             <View className="items-center py-10">
-              <Text className="text-gray-400">No vehicles found</Text>
+              <Text className="text-gray-500 text-center">
+                {error}
+              </Text>
+
+              <TouchableOpacity
+                onPress={fetchResults}
+                className="mt-4 bg-blue-600 px-5 py-2 rounded-full"
+              >
+                <Text className="text-white font-semibold">
+                  Try Again
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View className="items-center py-10">
+              <Text className="text-gray-400">
+                No vehicles found
+              </Text>
+
               <Text className="text-gray-300 text-sm mt-1">
                 Try different search or adjust filters
-
               </Text>
             </View>
-            ) : (
-              <ActivityIndicator size = "large" color="#2563EB"
-              className="py-20" />
-            )
-            }
+          )
+        }
+
       />
 
       {/* Filter Modal */}
