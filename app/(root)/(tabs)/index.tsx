@@ -18,7 +18,7 @@ export default function HomeScreen() {
   const [recommended, setRecommended] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchCars = async () => {
+  const fetchCars = useCallback (async () => {
     setLoading(true);
     
     const { data : featuredData } = await supabase
@@ -36,17 +36,13 @@ export default function HomeScreen() {
     setFeatured(featuredData ?? []);
     setRecommended(recommendedData ?? []);
     setLoading(false);
-
-    console.log(featured,recommended);
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchCars();
-    }, []),
+    }, [fetchCars]),
   );
-
-
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -144,12 +140,6 @@ export default function HomeScreen() {
           )
         }}
 
-
-        // renderItem={({item}) => (
-        //   <View className = "px-5">
-        //     <CarCard car={item} />
-        //   </View>
-        // )}
         ListEmptyComponent={
           !loading ? (
             <View className='items-center py-10'>

@@ -16,13 +16,12 @@ export default function CarCard({
 }) {
     const router = useRouter();
 
-    if (!car) return null; //added temp fix
-
     const { isSaved, saveLoading, toggleSave } = useSavedCar(
-        car.id,
+        car?.id ?? "",
         onUnsave,
     );
 
+    if (!car) return null;
 
     
     return (

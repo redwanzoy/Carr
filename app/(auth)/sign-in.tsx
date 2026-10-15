@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 
-//export default async function SignIn()
 export default function SignIn() {
   const {signIn, errors, fetchStatus} = useSignIn();
 
@@ -54,8 +53,6 @@ export default function SignIn() {
       console.error("Sign-in attempt not complete:", signIn);
     }
       
-
-    //if (!error) await signUp.verifications.sendEmailCode();
 
   };
 
@@ -193,7 +190,7 @@ export default function SignIn() {
           </TouchableOpacity>
 
           <View className="flex-row justify-center">
-            <Text className="text-gray-500">Don&apos;'t have an account? </Text>
+            <Text className="text-gray-500">Don{"'"}t have an account?</Text>
             <Link href="/sign-up">
               <Text className="text-blue-600 font-semibold">Sign Up</Text>
             </Link>{""}
@@ -206,17 +203,3 @@ export default function SignIn() {
     </ScrollView>
   );
 }
-
-
-/*import React from "react";
-import { Text, View } from "react-native";
-
-export default function SignUp() {
-  return (
-    <View className="flex-1 items-center justify-center bg-blue-500">
-      <Text className="text-6xl text-yellow-300 font-bold">
-        SIGN UP
-      </Text>
-    </View>
-  );
-}*/
